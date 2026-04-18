@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0a0a0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="接單判斷">
+<title>接單判斷</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=JetBrains+Mono:wght@600&display=swap');
+:root{
+  --bg:#0a0a0f;--s1:#13131a;--s2:#1c1c26;--bd:#272733;
+  --tx:#e2e2ee;--mu:#5e5e72;--ac:#4f8ef7;
+  --gn:#22c55e;--ye:#e6a817;--re:#ef4444;
+  --r:12px;--rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--tx);font-family:'Noto Sans TC',sans-serif;font-size:13px;min-height:100dvh;overscroll-behavior:none}
+body{max-width:400px;margin:0 auto;padding-bottom:max(env(safe-area-inset-bottom,0px),10px)}
+
+/* ─ Header ─ */
+.hdr{position:sticky;top:0;z-index:9;background:rgba(10,10,15,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--bd);padding:8px 12px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-size:14px;font-weight:900;letter-spacing:.02em}
+.logo span{color:var(--ac)}
+.wbadge{display:flex;align-items:center;gap:4px;background:var(--s2);border:1px solid var(--bd);border-radius:20px;padding:3px 9px;font-size:10px;color:var(--mu)}
+.wbadge b{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tx)}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--mu);flex-shrink:0;transition:background .3s}
+.dot.rain{background:#60a5fa;animation:blink 2s infinite}
+.dot.heavy{background:var(--re);animation:blink .9s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* ─ Install bar ─ */
+.ibar{display:none;align-items:center;gap:8px;margin:7px 10px 0;background:var(--s2);border:1px solid rgba(79,142,247,.3);border-radius:var(--r);padding:7px 11px;font-size:11px;color:var(--mu)}
+.ibar.show{display:flex}
+.ibar .ibtn{margin-left:auto;background:var(--ac);color:#fff;border:none;border-radius:6px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit}
+
+/* ─ Main ─ */
+.main{padding:8px 10px 0}
+
+/* ─ Card ─ */
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:10px 12px;margin-bottom:7px}
+.clabel{font-size:9px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--mu);margin-bottom:6px}
+
+/* ─ Selects grid ─ */
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.sw{display:flex;flex-direction:column;gap:3px}
+.sw label{font-size:9px;color:var(--mu);font-weight:600;letter-spacing:.04em}
+select{
+  appearance:none;-webkit-appearance:none;
+  background:var(--s2);border:1px solid var(--bd);border-radius:var(--rs);
+  color:var(--tx);font-family:'Noto Sans TC',sans-serif;
+  font-size:15px;font-weight:700;
+  padding:8px 24px 8px 9px;width:100%;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='5'%3E%3Cpath d='M0 0l4.5 5L9 0z' fill='%235e5e72'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 7px center;
+  transition:border-color .15s;
+}
+select:focus{outline:none;border-color:var(--ac)}
+
+/* ─ Weather row ─ */
+.wrow{display:flex;align-items:center;gap:9px}
+.wico{font-size:24px;line-height:1;flex-shrink:0}
+.winf{flex:1;min-width:0}
+.wlv{font-size:13px;font-weight:700;line-height:1.2}
+.wsub{font-size:10px;color:var(--mu);margin-top:2px}
+.wsub b{font-family:'JetBrains Mono',monospace;color:var(--tx)}
+.wside{text-align:right;flex-shrink:0}
+.wtm{font-size:9px;color:var(--mu);line-height:1.3}
+.rbtn{background:none;border:none;color:var(--ac);font-size:15px;cursor:pointer;padding:0;display:block;margin:3px auto 0;line-height:1;transition:transform .35s}
+.rbtn:active{transform:rotate(180deg)}
+.rbtn.spin{animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.etag{font-size:9px;color:#f87171;background:rgba(239,68,68,.1);border-radius:4px;padding:1px 5px;display:inline-block;margin-top:2px}
+
+/* ─ Judge button ─ */
+.jbtn{width:100%;background:var(--ac);color:#fff;border:none;border-radius:var(--r);font-family:'Noto Sans TC',sans-serif;font-size:15px;font-weight:700;letter-spacing:.06em;padding:13px;cursor:pointer;margin-bottom:7px;position:relative;overflow:hidden;transition:transform .1s,opacity .1s}
+.jbtn:active{transform:scale(.98);opacity:.88}
+.jbtn::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.1),transparent 55%);pointer-events:none}
+
+/* ─ Result ─ */
+.rcard{border-radius:var(--r);padding:12px 13px;margin-bottom:7px;border:1px solid var(--bd);display:none;animation:su .2s ease-out}
+.rcard.show{display:block}
+.rcard.g{background:rgba(34,197,94,.07);border-color:rgba(34,197,94,.22)}
+.rcard.y{background:rgba(230,168,23,.07);border-color:rgba(230,168,23,.22)}
+.rcard.r{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.22)}
+@keyframes su{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
+.rverdict{font-size:26px;font-weight:900;line-height:1.1;margin-bottom:4px}
+.rcard.g .rverdict{color:var(--gn)}.rcard.y .rverdict{color:var(--ye)}.rcard.r .rverdict{color:var(--re)}
+.rchips{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.chip{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:2px 9px;font-size:10px;color:var(--mu);white-space:nowrap}
+.chip b{color:var(--tx);font-family:'JetBrains Mono',monospace;font-size:10px}
+.rnotes{margin-top:6px;font-size:10px;color:var(--mu);line-height:1.75}
+.tag{display:inline-block;background:rgba(255,255,255,.06);border-radius:3px;padding:0 4px;font-size:9px;margin-right:3px;color:#9090aa}
+
+/* ─ Rules ref ─ */
+.rules{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:9px 12px;margin-bottom:10px}
+.rules summary{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);cursor:pointer;user-select:none;list-style:none;display:flex;align-items:center;gap:5px}
+.rules summary::after{content:'▸';transition:transform .2s}
+.rules[open] summary::after{content:'▾'}
+.rules summary::-webkit-details-marker{display:none}
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:7px}
+.ri{background:var(--s2);border-radius:var(--rs);padding:7px 9px;font-size:10px;color:var(--mu);line-height:1.6}
+.ri strong{color:var(--tx);font-size:11px;display:block;margin-bottom:2px}
+.ri .cg{color:var(--gn)}.ri .cy{color:var(--ye)}.ri .cr{color:var(--re)}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="hdr">
+  <div class="logo">接<span>單</span>判斷</div>
+  <div class="wbadge">
+    <div class="dot" id="hDot"></div>
+    <b id="hMM">--</b>&nbsp;mm/hr
+  </div>
+</div>
+
+<!-- Install bar -->
+<div class="ibar" id="ibar">
+  📲 加到主畫面，離線可用
+  <button class="ibtn" id="ibtn">安裝</button>
+</div>
+
+<div class="main">
+
+  <!-- Order inputs -->
+  <div class="card">
+    <div class="clabel">訂單資訊</div>
+    <div class="sg">
+      <div class="sw">
+        <label>單數</label>
+        <select id="sO">
+          <option value="1">1 單</option>
+          <option value="2">2 單</option>
+          <option value="3">3 單</option>
+        </select>
+      </div>
+      <div class="sw">
+        <label>金額（元）</label>
+        <select id="sA">
+          <option value="50">50</option>
+          <option value="55">55</option>
+          <option value="60">60</option>
+          <option value="65">65</option>
+          <option value="70">70</option>
+          <option value="80">80</option>
+          <option value="90">90</option>
+          <option value="100">100</option>
+          <option value="110">110</option>
+          <option value="120">120</option>
+          <option value="150">150</option>
+          <option value="180">180</option>
+          <option value="200">200</option>
+        </select>
+      </div>
+      <div class="sw">
+        <label>公里數</label>
+        <select id="sK">
+          <option value="1">1 km</option>
+          <option value="2">2 km</option>
+          <option value="3">3 km</option>
+          <option value="4">4 km</option>
+          <option value="5">5 km</option>
+          <option value="6">6 km</option>
+          <option value="7">7 km</option>
+          <option value="8">8 km</option>
+          <option value="9">9 km</option>
+          <option value="10">10 km</option>
+          <option value="11">11 km</option>
+          <option value="12">12 km</option>
+          <option value="13">13 km</option>
+          <option value="14">14 km</option>
+          <option value="15">15 km</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weather (auto) -->
+  <div class="card">
+    <div class="clabel">即時天氣（自動偵測）</div>
+    <div class="wrow">
+      <div class="wico" id="wIco">🌡️</div>
+      <div class="winf">
+        <div class="wlv" id="wLv">偵測中…</div>
+        <div class="wsub">雨量：<b id="wMM">--</b> mm/hr</div>
+        <div id="wErr"></div>
+      </div>
+      <div class="wside">
+        <div class="wtm" id="wTm">--:--</div>
+        <button class="rbtn" id="rbtn">↻</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Judge button -->
+  <button class="jbtn" id="jbtn">⚡ 立即判斷</button>
+
+  <!-- Result -->
+  <div class="rcard" id="rcard">
+    <div class="rverdict" id="rverdict"></div>
+    <div class="rchips" id="rchips"></div>
+    <div class="rnotes" id="rnotes"></div>
+  </div>
+
+  <!-- Rules reference -->
+  <details class="rules">
+    <summary>判斷規則總覽</summary>
+    <div class="rgrid">
+      <div class="ri">
+        <strong>無雨基準</strong>
+        <div class="cg">≥ 15 → 可接</div>
+        <div class="cy">13–15 → 挑單</div>
+        <div class="cr">&lt; 13 → 不接</div>
+      </div>
+      <div class="ri">
+        <strong>天氣加權</strong>
+        <div>毛毛雨 +0.5</div>
+        <div>小雨 +1</div>
+        <div>中雨 +2</div>
+        <div>大雨 +3</div>
+      </div>
+      <div class="ri">
+        <strong>多單嚴格</strong>
+        <div class="cr">2單 &lt;13 → 不接</div>
+        <div class="cr">3單 &lt;14 → 不接</div>
+      </div>
+      <div class="ri">
+        <strong>硬規則</strong>
+        <div class="cr">55元 ≥5km → 不接</div>
+        <div class="cr">&lt;13/km → 不接</div>
+      </div>
+    </div>
+  </details>
+
+</div><!-- /main -->
+
+<script>
+// ═══════════════════════════════════════════
+//  Weather levels
+// ═══════════════════════════════════════════
+const WL = [
+  { max: 0.1,      icon: '☀️',  label: '無雨',   w: 0,   dot: ''      },
+  { max: 1,        icon: '🌫️', label: '毛毛雨', w: 0.5, dot: 'rain'  },
+  { max: 3,        icon: '🌦️', label: '小雨',   w: 1,   dot: 'rain'  },
+  { max: 10,       icon: '🌧️', label: '中雨',   w: 2,   dot: 'rain'  },
+  { max: Infinity, icon: '⛈️', label: '大雨',   w: 3,   dot: 'heavy' },
+];
+let rainMM = 0;
+const getLevel = mm => WL.find(w => mm < w.max);
+
+// ═══════════════════════════════════════════
+//  Weather fetch  (Open-Meteo, no key needed)
+// ═══════════════════════════════════════════
+async function fetchWeather() {
+  const btn = document.getElementById('rbtn');
+  btn.classList.add('spin');
+  document.getElementById('wErr').innerHTML = '';
+  try {
+    let lat = 25.1283, lon = 121.7419; // Keelung default
+    try {
+      const p = await new Promise((res, rej) =>
+        navigator.geolocation.getCurrentPosition(res, rej, { timeout: 4000 }));
+      lat = p.coords.latitude;
+      lon = p.coords.longitude;
+    } catch (_) {}
+
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=precipitation&forecast_days=1&timezone=Asia%2FTaipei&timeformat=unixtime`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(9000) });
+    if (!res.ok) throw new Error();
+    const d = await res.json();
+    const now = Math.floor(Date.now() / 1000);
+    let bi = 0, bd = Infinity;
+    d.hourly.time.forEach((t, i) => { const df = Math.abs(t - now); if (df < bd) { bd = df; bi = i; } });
+    rainMM = Math.max(0, d.hourly.precipitation[bi]);
+    renderWeather(false);
+  } catch (_) {
+    renderWeather(true);
+  } finally {
+    btn.classList.remove('spin');
+  }
+}
+
+function renderWeather(err) {
+  const lv = getLevel(rainMM);
+  document.getElementById('wIco').textContent = lv.icon;
+  document.getElementById('wLv').textContent  = lv.label;
+  document.getElementById('wMM').textContent  = rainMM.toFixed(1);
+  document.getElementById('hMM').textContent  = rainMM.toFixed(1);
+  const dot = document.getElementById('hDot');
+  dot.className = 'dot' + (lv.dot ? ' ' + lv.dot : '');
+  const n = new Date();
+  document.getElementById('wTm').textContent =
+    String(n.getHours()).padStart(2, '0') + ':' + String(n.getMinutes()).padStart(2, '0');
+  document.getElementById('wErr').innerHTML =
+    err ? '<span class="etag">定位失敗，使用暫存值</span>' : '';
+}
+
+document.getElementById('rbtn').addEventListener('click', fetchWeather);
+setInterval(fetchWeather, 5 * 60 * 1000);
+fetchWeather();
+
+// ═══════════════════════════════════════════
+//  Judge logic
+// ═══════════════════════════════════════════
+document.getElementById('jbtn').addEventListener('click', () => {
+  const orders = +document.getElementById('sO').value;
+  const amount = +document.getElementById('sA').value;
+  const km     = +document.getElementById('sK').value;
+  const perKm  = amount / km;
+  const lv     = getLevel(rainMM);
+
+  // Rain-adjusted floors
+  const notFloor  = 13 + lv.w;   // below → 不接
+  const pickFloor = 15 + lv.w;   // above → 可接
+
+  let verdict = '', label = '', notes = [];
+
+  // ── Hard rules (top priority) ──
+  let hard = false;
+  if (amount === 55 && km >= 5)      { hard = true; notes.push('<span class="tag">硬規則</span>55元且≥5km，虧本'); }
+  if (perKm < 13)                    { hard = true; notes.push('<span class="tag">硬規則</span>每公里低於13元'); }
+  if (orders === 2 && perKm < 13)   { hard = true; notes.push('<span class="tag">2單</span>每公里低於13元'); }
+  if (orders === 3 && perKm < 14)   { hard = true; notes.push('<span class="tag">3單</span>每公里低於14元'); }
+
+  if (hard) {
+    verdict = 'r'; label = '🔴 不接';
+  } else {
+    const floor = orders === 3 ? Math.max(14, notFloor)  : notFloor;
+    const pick  = orders === 3 ? Math.max(16, pickFloor) : pickFloor;
+    if      (perKm >= pick)  { verdict = 'g'; label = '🟢 可接'; }
+    else if (perKm >= floor) { verdict = 'y'; label = '🟡 挑單'; notes.push('建議確認距離與時間'); }
+    else                     { verdict = 'r'; label = '🔴 不接'; notes.push('低於天氣調整後門檻'); }
+    if (verdict === 'g' && lv.w > 0) notes.push(`雨天加成 +${lv.w} 已計入`);
+  }
+
+  const card = document.getElementById('rcard');
+  card.className = 'rcard show ' + verdict;
+  document.getElementById('rverdict').textContent = label;
+  document.getElementById('rchips').innerHTML =
+    `<div class="chip">每公里 <b>${perKm.toFixed(1)}</b> 元</div>
+     <div class="chip">天氣 <b>${lv.label}</b></div>
+     <div class="chip">雨量 <b>${rainMM.toFixed(1)}</b> mm</div>`;
+  document.getElementById('rnotes').innerHTML = notes.join('　');
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+});
+
+// ═══════════════════════════════════════════
+//  PWA — inline manifest (Blob URL)
+// ═══════════════════════════════════════════
+function makeIcon(sz) {
+  const c = document.createElement('canvas');
+  c.width = c.height = sz;
+  const x = c.getContext('2d');
+  x.fillStyle = '#0a0a0f'; x.fillRect(0, 0, sz, sz);
+  const m = sz / 8, r = sz / 5.5;
+  x.beginPath();
+  if (x.roundRect) x.roundRect(m, m, sz - 2*m, sz - 2*m, r);
+  else x.rect(m, m, sz - 2*m, sz - 2*m);
+  x.fillStyle = '#13131a'; x.fill();
+  x.strokeStyle = '#2a2a38'; x.lineWidth = Math.max(1, sz / 70); x.stroke();
+  // lightning bolt
+  const cx = sz / 2, cy = sz / 2, ps = sz * 0.27;
+  x.beginPath();
+  x.moveTo(cx + ps*.12, cy - ps);
+  x.lineTo(cx - ps*.18, cy - ps*.04);
+  x.lineTo(cx + ps*.22, cy - ps*.04);
+  x.lineTo(cx - ps*.12, cy + ps);
+  x.lineTo(cx + ps*.18, cy + ps*.04);
+  x.lineTo(cx - ps*.18, cy + ps*.04);
+  x.closePath();
+  x.fillStyle = '#4f8ef7'; x.fill();
+  return c.toDataURL('image/png');
+}
+
+(function initPWA() {
+  const manifest = {
+    name: '接單判斷 — 外送員工具',
+    short_name: '接單判斷',
+    start_url: './',
+    display: 'standalone',
+    background_color: '#0a0a0f',
+    theme_color: '#0a0a0f',
+    lang: 'zh-TW',
+    icons: [
+      { src: makeIcon(192), sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+      { src: makeIcon(512), sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+    ]
+  };
+  const mb = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+  const ml = document.createElement('link');
+  ml.rel = 'manifest'; ml.href = URL.createObjectURL(mb);
+  document.head.appendChild(ml);
+
+  // Service Worker (inline blob)
+  if ('serviceWorker' in navigator) {
+    const sw = `
+const C='dj-v2';
+self.addEventListener('install',e=>{
+  e.waitUntil(caches.open(C).then(c=>c.addAll([location.pathname])));
+  self.skipWaiting();
+});
+self.addEventListener('activate',e=>{
+  e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))));
+  self.clients.claim();
+});
+self.addEventListener('fetch',e=>{
+  if(/open-meteo|fonts/.test(e.request.url))return;
+  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
+});`;
+    const sb = new Blob([sw], { type: 'text/javascript' });
+    navigator.serviceWorker.register(URL.createObjectURL(sb), { scope: './' }).catch(() => {});
+  }
+
+  // Install prompt
+  let dp = null;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault(); dp = e;
+    document.getElementById('ibar').classList.add('show');
+  });
+  document.getElementById('ibtn').addEventListener('click', async () => {
+    if (!dp) return;
+    dp.prompt();
+    const { outcome } = await dp.userChoice;
+    if (outcome === 'accepted') document.getElementById('ibar').classList.remove('show');
+    dp = null;
+  });
+})();
+</script>
+</body>
+</html>
